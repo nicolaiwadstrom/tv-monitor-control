@@ -3,8 +3,9 @@ Simple app for MacOS to control LG TVs used as monitors
 
 Created to solve my own problem of more seamless use of LG OLED TV's that I use for monitors for my Macs.
 
-Just build the app, and put under Applications, and have it auto start when you login.
+# Installation
 
+Build the app (there is a simple script build_app.sh), and then put the app in your Applications folder (I use the one in my home directory for this) and add it to Auto start items when you login. Open the App to configure your TVs, then close the Window (it will keep running in the background).
 
 Features:
  - Will capture volume controls on MacOS and control the volume on the TVs.
