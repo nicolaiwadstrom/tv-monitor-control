@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "LGTVControl",
+    name: "TVMonitorControl",
     platforms: [.macOS(.v13)],
     targets: [
         .executableTarget(
-            name: "LGTVControl",
-            path: "Sources/LGTVControl"
+            name: "TVMonitorControl",
+            path: "Sources/TVMonitorControl"
         )
     ]
 )

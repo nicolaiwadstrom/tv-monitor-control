@@ -42,7 +42,7 @@ struct SettingsView: View {
 
     private func addTV() {
         var tv = TVConfig()
-        tv.name = "LG TV \(store.tvs.count + 1)"
+        tv.name = "\(tv.tvType.defaultName) \(store.tvs.count + 1)"
         store.tvs.append(tv)
         selection = tv.id
     }
@@ -67,6 +67,9 @@ private struct TVEditor: View {
     var body: some View {
         Form {
             Toggle("Control this TV", isOn: $tv.enabled)
+            Picker("TV Type", selection: $tv.tvType) {
+                ForEach(TVType.allCases) { Text($0.label).tag($0) }
+            }
             TextField("Name", text: $tv.name)
             TextField("IP address", text: $tv.ip)
 
@@ -116,7 +119,7 @@ private struct TVEditor: View {
                 }
             }
 
-            Text("On the TV, enable Wake-on-LAN (Settings → General → Devices → External Devices → TV On With Mobile → Turn on via Wi-Fi; applies to Ethernet too). Screen-off mode keeps the TV reachable and wakes fastest.")
+            Text(tv.tvType.setupHelp)
                 .font(.caption).foregroundStyle(.secondary)
         }
         .formStyle(.grouped)

@@ -9,7 +9,7 @@ if let bundleID = Bundle.main.bundleIdentifier {
     if !others.isEmpty {
         if ProcessInfo.processInfo.environment["XPC_SERVICE_NAME"] != BackgroundService.label {
             DistributedNotificationCenter.default().postNotificationName(
-                Notification.Name("dev.local.LGTVControl.openSettings"),
+                Notification.Name("dev.local.TVMonitorControl.openSettings"),
                 object: nil, userInfo: nil, deliverImmediately: true)
         }
         exit(0)

@@ -26,7 +26,7 @@ final class WebOSClient: NSObject, URLSessionDelegate, URLSessionWebSocketDelega
     private let host: String
     private(set) var clientKey: String?
 
-    private let queue = DispatchQueue(label: "lgtv.webos.client")
+    private let queue = DispatchQueue(label: "tvmonitorcontrol.webos.client")
     private var session: URLSession?
     private var socket: URLSessionWebSocketTask?
     private var waiters: [String: Waiter] = [:]

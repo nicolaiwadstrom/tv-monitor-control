@@ -3,7 +3,7 @@ import SwiftUI
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
-    static let openSettingsNotification = Notification.Name("dev.local.LGTVControl.openSettings")
+    static let openSettingsNotification = Notification.Name("dev.local.TVMonitorControl.openSettings")
 
     private let store = ConfigStore()
     private lazy var controller = TVController(store: store)
@@ -17,7 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         installMainMenu()
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        statusItem.button?.image = NSImage(systemSymbolName: "tv", accessibilityDescription: "LG TV Control")
+        statusItem.button?.image = NSImage(systemSymbolName: "tv", accessibilityDescription: "TV Monitor Control")
         let menu = NSMenu()
         menu.delegate = self
         statusItem.menu = menu
@@ -129,7 +129,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func toggleService() {
         guard Bundle.main.bundleIdentifier != nil else {
-            alert("Run the packaged LGTVControl.app (./build_app.sh) to use the background service.")
+            alert("Run the packaged TVMonitorControl.app (./build_app.sh) to use the background service.")
             return
         }
         do {
@@ -139,7 +139,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             } else {
                 try BackgroundService.enable()
                 if BackgroundService.status == .requiresApproval {
-                    alert("Allow “LG TV Control” under System Settings → General → Login Items, then choose this menu item again.")
+                    alert("Allow “TV Monitor Control” under System Settings → General → Login Items, then choose this menu item again.")
                 }
             }
         } catch {
@@ -150,7 +150,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func alert(_ text: String) {
         NSApp.activate(ignoringOtherApps: true)
         let a = NSAlert()
-        a.messageText = "LG TV Control"
+        a.messageText = "TV Monitor Control"
         a.informativeText = text
         a.runModal()
     }
@@ -161,7 +161,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if settingsWindow == nil {
             let hosting = NSHostingController(rootView: SettingsView(store: store, controller: controller))
             let window = NSWindow(contentViewController: hosting)
-            window.title = "LG TV Control"
+            window.title = "TV Monitor Control"
             window.styleMask = [.titled, .closable, .resizable, .miniaturizable]
             window.isReleasedWhenClosed = false
             window.center()

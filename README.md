@@ -1,5 +1,5 @@
-# lgtv-control
-Simple app for MacOS to control LG TVs used as monitors, created to solve my own problem of more seamless use of LG OLED TV's that I use for monitors for my Macs.
+# TV Monitor Control
+Simple app for MacOS to control TVs used as monitors, created to solve my own problem of more seamless use of LG OLED TVs that I use for monitors for my Macs. Supported TV types (selectable per TV in Settings): LG (WebOS).
 
 # Installation
 Build the app (there is a simple script build_app.sh), and then put the app in your Applications folder (I use the one in my home directory for this) and add it to Auto start items when you login. Open the App to configure your TVs, then close the Window (it will keep running in the background).

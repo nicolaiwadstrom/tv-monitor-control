@@ -12,10 +12,9 @@ enum VolumeAction {
 final class VolumeController {
     private let store: ConfigStore
     private let isActive: () -> Bool
-    private var clients: [UUID: WebOSClient] = [:]
+    private var clients: [UUID: TVConnection] = [:]
     private var chains: [UUID: Task<Void, Never>] = [:]
     private var pending: [UUID: Int] = [:]
-    private var muted: [UUID: Bool] = [:]
     private var lastFailure: [UUID: Date] = [:]
 
     init(store: ConfigStore, isActive: @escaping () -> Bool) {
@@ -53,16 +52,9 @@ final class VolumeController {
             do {
                 let client = try await connected(tv)
                 switch action {
-                case .up:
-                    try await client.request("ssap://audio/volumeUp")
-                case .down:
-                    try await client.request("ssap://audio/volumeDown")
-                case .toggleMute:
-                    var current = muted[id] ?? false
-                    if let status = try? await client.request("ssap://audio/getStatus"),
-                       let m = status["mute"] as? Bool { current = m }
-                    try await client.request("ssap://audio/setMute", payload: ["mute": !current])
-                    muted[id] = !current
+                case .up: try await client.volumeUp()
+                case .down: try await client.volumeDown()
+                case .toggleMute: try await client.toggleMute()
                 }
                 lastFailure[id] = nil
                 return
@@ -74,10 +66,10 @@ final class VolumeController {
         lastFailure[id] = Date()
     }
 
-    private func connected(_ tv: TVConfig) async throws -> WebOSClient {
+    private func connected(_ tv: TVConfig) async throws -> TVConnection {
         if let c = clients[tv.id], c.isAlive { return c }
         clients[tv.id]?.close()
-        let c = WebOSClient(host: tv.ip, clientKey: tv.clientKey)
+        let c = tv.tvType.makeConnection(host: tv.ip, credential: tv.clientKey)
         try await c.connect(pairingTimeout: 5)
         clients[tv.id] = c
         return c

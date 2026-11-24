@@ -33,7 +33,8 @@ enum VolumeMode: String, Codable, CaseIterable, Identifiable {
 
 struct TVConfig: Codable, Identifiable, Equatable {
     var id = UUID()
-    var name = "LG TV"
+    var tvType: TVType = .lgWebOS
+    var name = TVType.lgWebOS.defaultName
     var ip = ""
     var mac = ""
     var inputId = "HDMI_1"
@@ -43,13 +44,17 @@ struct TVConfig: Codable, Identifiable, Equatable {
     var knownInputs: [String] = []
     var volumeMode: VolumeMode = .off
 
-    init() {}
+    init(type: TVType = .lgWebOS) {
+        tvType = type
+        name = type.defaultName
+    }
 
     // Tolerant decoding so config files written by older versions still load.
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
-        name = try c.decodeIfPresent(String.self, forKey: .name) ?? "LG TV"
+        tvType = try c.decodeIfPresent(TVType.self, forKey: .tvType) ?? .lgWebOS
+        name = try c.decodeIfPresent(String.self, forKey: .name) ?? tvType.defaultName
         ip = try c.decodeIfPresent(String.self, forKey: .ip) ?? ""
         mac = try c.decodeIfPresent(String.self, forKey: .mac) ?? ""
         inputId = try c.decodeIfPresent(String.self, forKey: .inputId) ?? "HDMI_1"
@@ -61,7 +66,7 @@ struct TVConfig: Codable, Identifiable, Equatable {
     }
 }
 
-/// Persists the TV list as JSON in ~/Library/Application Support/LGTVControl/config.json.
+/// Persists the TV list as JSON in ~/Library/Application Support/TVMonitorControl/config.json.
 /// The file holds pairing keys, so it is written with 0600 permissions.
 @MainActor
 final class ConfigStore: ObservableObject {
@@ -72,8 +77,14 @@ final class ConfigStore: ObservableObject {
     private let url: URL
 
     init() {
-        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("LGTVControl", isDirectory: true)
+        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        let dir = base.appendingPathComponent("TVMonitorControl", isDirectory: true)
+        // Migrate config from the app's previous name (LGTVControl).
+        let legacy = base.appendingPathComponent("LGTVControl", isDirectory: true)
+        if !FileManager.default.fileExists(atPath: dir.path),
+           FileManager.default.fileExists(atPath: legacy.path) {
+            try? FileManager.default.moveItem(at: legacy, to: dir)
+        }
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         url = dir.appendingPathComponent("config.json")
         if let data = try? Data(contentsOf: url),

@@ -4,8 +4,8 @@ import ServiceManagement
 /// Registers a per-user LaunchAgent (shipped inside the app bundle) that starts the app at login
 /// and restarts it if it crashes. A normal Quit (exit code 0) is not restarted.
 enum BackgroundService {
-    static let label = "dev.local.LGTVControl.agent"
-    static let plistName = "dev.local.LGTVControl.agent.plist"
+    static let label = "dev.local.TVMonitorControl.agent"
+    static let plistName = "dev.local.TVMonitorControl.agent.plist"
 
     static var service: SMAppService { .agent(plistName: plistName) }
     static var status: SMAppService.Status { service.status }

@@ -1,7 +1,7 @@
 import Foundation
 import os
 
-private let log = Logger(subsystem: "dev.local.LGTVControl", category: "tv")
+private let log = Logger(subsystem: "dev.local.TVMonitorControl", category: "tv")
 
 @MainActor
 final class TVController: ObservableObject {
@@ -52,16 +52,13 @@ final class TVController: ObservableObject {
     func pair(_ id: UUID) async {
         guard let tv = store.tv(id) else { return }
         setStatus(id, "Connecting… accept the prompt on the TV if it appears")
-        let client = WebOSClient(host: tv.ip, clientKey: tv.clientKey)
+        let client = tv.tvType.makeConnection(host: tv.ip, credential: tv.clientKey)
         defer { client.close() }
         do {
             try await client.connect(pairingTimeout: 60)
-            store.update(id) { $0.clientKey = client.clientKey }
-            if let reply = try? await client.request("ssap://tv/getExternalInputList"),
-               let devices = reply["devices"] as? [[String: Any]] {
-                let ids = devices.compactMap { $0["id"] as? String }
-                store.update(id) { $0.knownInputs = ids }
-            }
+            store.update(id) { $0.clientKey = client.credential }
+            let inputs = await client.listInputs()
+            if !inputs.isEmpty { store.update(id) { $0.knownInputs = inputs } }
             if store.tv(id)?.mac.isEmpty == true, let mac = await WakeOnLAN.lookupMAC(ip: tv.ip) {
                 store.update(id) { $0.mac = mac }
             }
@@ -87,22 +84,12 @@ final class TVController: ObservableObject {
     private func turnOff(_ id: UUID) async {
         guard let tv = store.tv(id) else { return }
         setStatus(id, "Turning off…")
-        let client = WebOSClient(host: tv.ip, clientKey: tv.clientKey)
+        let client = tv.tvType.makeConnection(host: tv.ip, credential: tv.clientKey)
         defer { client.close() }
         do {
             try await client.connect(pairingTimeout: 5)
             persistKey(id, client)
-            switch tv.mode {
-            case .powerOff:
-                try await client.request("ssap://system/turnOff")
-            case .screenOff:
-                do {
-                    try await client.request("ssap://com.webos.service.tvpower/power/turnOffScreen")
-                } catch {
-                    try await client.request("ssap://com.webos.service.tvpower/power/turnOffScreen",
-                                             payload: ["standbyMode": "active"])
-                }
-            }
+            try await client.turnOff(mode: tv.mode)
             setStatus(id, "Off")
         } catch {
             log.error("turnOff \(tv.name) failed: \(error.localizedDescription)")
@@ -122,15 +109,11 @@ final class TVController: ObservableObject {
                 WakeOnLAN.send(mac: tv.mac, ip: tv.ip)
                 lastWoL = Date()
             }
-            let client = WebOSClient(host: tv.ip, clientKey: tv.clientKey)
+            let client = tv.tvType.makeConnection(host: tv.ip, credential: tv.clientKey)
             do {
                 try await client.connect(pairingTimeout: 5)
                 persistKey(id, client)
-                if tv.mode == .screenOff {
-                    // Errors if the screen is already on; that's fine.
-                    _ = try? await client.request("ssap://com.webos.service.tvpower/power/turnOnScreen")
-                }
-                try await client.request("ssap://tv/switchInput", payload: ["inputId": tv.inputId])
+                try await client.turnOn(mode: tv.mode, input: tv.inputId)
                 client.close()
                 setStatus(id, "On (\(tv.inputId))")
                 return
@@ -146,8 +129,8 @@ final class TVController: ObservableObject {
         }
     }
 
-    private func persistKey(_ id: UUID, _ client: WebOSClient) {
-        if let key = client.clientKey, store.tv(id)?.clientKey != key {
+    private func persistKey(_ id: UUID, _ client: TVConnection) {
+        if let key = client.credential, store.tv(id)?.clientKey != key {
             store.update(id) { $0.clientKey = key }
         }
     }
