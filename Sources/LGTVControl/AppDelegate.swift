@@ -95,6 +95,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         service.state = BackgroundService.isEnabled ? .on : .off
         menu.addItem(service)
         menu.addItem(.separator())
+        menu.addItem(item("About TV Control", #selector(showAbout)))
         menu.addItem(item("Quit", #selector(quit), key: "q"))
     }
 
@@ -109,6 +110,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func allOn() { controller.setAll(on: true) }
     @objc private func allOff() { controller.setAll(on: false) }
     @objc private func quit() { NSApp.terminate(nil) }
+
+    @objc private func showAbout() {
+        NSApp.activate(ignoringOtherApps: true)
+        let a = NSAlert()
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev"
+        a.messageText = "TV Control for MacOS v\(version)"
+        a.informativeText = "(C) Copyright Nicolai Wadstrom 2026."
+        a.addButton(withTitle: "OK")
+        a.runModal()
+    }
 
     @objc private func openAccessibilitySettings() {
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
