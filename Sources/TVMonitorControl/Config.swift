@@ -43,6 +43,14 @@ struct TVConfig: Codable, Identifiable, Equatable {
     var clientKey: String?
     var knownInputs: [String] = []
     var volumeMode: VolumeMode = .off
+    /// If true, the TV's label for the input we switch to is set to `inputLabel`.
+    var setInputName = false
+    /// Label to show on the TV for the input. Defaults to this Mac's hostname.
+    var inputLabel = TVConfig.defaultInputLabel
+
+    static var defaultInputLabel: String {
+        Host.current().localizedName ?? ProcessInfo.processInfo.hostName
+    }
 
     init(type: TVType = .lgWebOS) {
         tvType = type
@@ -63,6 +71,9 @@ struct TVConfig: Codable, Identifiable, Equatable {
         clientKey = try c.decodeIfPresent(String.self, forKey: .clientKey)
         knownInputs = try c.decodeIfPresent([String].self, forKey: .knownInputs) ?? []
         volumeMode = try c.decodeIfPresent(VolumeMode.self, forKey: .volumeMode) ?? .off
+        setInputName = try c.decodeIfPresent(Bool.self, forKey: .setInputName) ?? false
+        let label = try c.decodeIfPresent(String.self, forKey: .inputLabel) ?? ""
+        inputLabel = label.isEmpty ? TVConfig.defaultInputLabel : label
     }
 }
 

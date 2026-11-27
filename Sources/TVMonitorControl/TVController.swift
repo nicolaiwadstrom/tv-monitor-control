@@ -68,6 +68,22 @@ final class TVController: ObservableObject {
         }
     }
 
+    /// Sets the input name on the TV right now (used by the "Set now" button).
+    func applyInputName(_ id: UUID) async {
+        guard let tv = store.tv(id), !tv.inputLabel.isEmpty else { return }
+        setStatus(id, "Setting input name…")
+        let client = tv.tvType.makeConnection(host: tv.ip, credential: tv.clientKey)
+        defer { client.close() }
+        do {
+            try await client.connect(pairingTimeout: 5)
+            persistKey(id, client)
+            try await client.setInputName(tv.inputLabel, input: tv.inputId)
+            setStatus(id, "Input name set to \"\(tv.inputLabel)\"")
+        } catch {
+            setStatus(id, "Setting input name failed: \(error.localizedDescription)")
+        }
+    }
+
     func detectMAC(_ id: UUID) async {
         guard let tv = store.tv(id) else { return }
         setStatus(id, "Looking up MAC address…")
@@ -114,8 +130,16 @@ final class TVController: ObservableObject {
                 try await client.connect(pairingTimeout: 5)
                 persistKey(id, client)
                 try await client.turnOn(mode: tv.mode, input: tv.inputId)
+                var note = ""
+                if tv.setInputName, !tv.inputLabel.isEmpty {
+                    do { try await client.setInputName(tv.inputLabel, input: tv.inputId) }
+                    catch {
+                        log.error("setInputName \(tv.name) failed: \(error.localizedDescription)")
+                        note = " (could not set input name)"
+                    }
+                }
                 client.close()
-                setStatus(id, "On (\(tv.inputId))")
+                setStatus(id, "On (\(tv.inputId))\(note)")
                 return
             } catch {
                 lastError = error.localizedDescription
