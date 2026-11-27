@@ -68,7 +68,14 @@ final class TVController: ObservableObject {
         }
     }
 
-    /// Sets the input name on the TV right now (used by the "Set now" button).
+    /// Sets the input source name on every enabled TV that has the option switched on.
+    func applyInputNames() {
+        for tv in store.tvs where tv.enabled && tv.setInputName {
+            Task { await applyInputName(tv.id) }
+        }
+    }
+
+    /// Sets the input source name on one TV (the "Set now" button), regardless of its toggle.
     func applyInputName(_ id: UUID) async {
         guard let tv = store.tv(id), !tv.inputLabel.isEmpty else { return }
         setStatus(id, "Setting input name…")
@@ -130,16 +137,8 @@ final class TVController: ObservableObject {
                 try await client.connect(pairingTimeout: 5)
                 persistKey(id, client)
                 try await client.turnOn(mode: tv.mode, input: tv.inputId)
-                var note = ""
-                if tv.setInputName, !tv.inputLabel.isEmpty {
-                    do { try await client.setInputName(tv.inputLabel, input: tv.inputId) }
-                    catch {
-                        log.error("setInputName \(tv.name) failed: \(error.localizedDescription)")
-                        note = " (could not set input name)"
-                    }
-                }
                 client.close()
-                setStatus(id, "On (\(tv.inputId))\(note)")
+                setStatus(id, "On (\(tv.inputId))")
                 return
             } catch {
                 lastError = error.localizedDescription

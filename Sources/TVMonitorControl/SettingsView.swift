@@ -89,7 +89,7 @@ private struct TVEditor: View {
                 .fixedSize()
             }
 
-            Toggle("Set input name on this TV", isOn: $tv.setInputName)
+            Toggle("Set input source name on this TV", isOn: $tv.setInputName)
             if tv.setInputName {
                 HStack {
                     TextField("Input name", text: $tv.inputLabel, prompt: Text(TVConfig.defaultInputLabel))
@@ -97,7 +97,7 @@ private struct TVEditor: View {
                     Button("Set now") { Task { await controller.applyInputName(tv.id) } }
                         .disabled(tv.clientKey == nil)
                 }
-                Text("Names the wake input above on the TV (applied whenever the TV is woken, and with Set now).")
+                Text("Renames the input above (as shown in the TV's input list) to this name. Applied with Set now, or from the menu bar: Set input names on TVs.")
                     .font(.caption).foregroundStyle(.secondary)
             }
 

@@ -89,6 +89,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(.separator())
         menu.addItem(item("Turn all TVs on", #selector(allOn)))
         menu.addItem(item("Turn all TVs off", #selector(allOff)))
+        menu.addItem(item("Set input names on TVs", #selector(setInputNames)))
         menu.addItem(.separator())
         menu.addItem(item("Settings…", #selector(openSettings), key: ","))
         let service = item("Run as background service (auto-restart)", #selector(toggleService))
@@ -109,6 +110,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func allOn() { controller.setAll(on: true) }
     @objc private func allOff() { controller.setAll(on: false) }
+    @objc private func setInputNames() { controller.applyInputNames() }
     @objc private func quit() { NSApp.terminate(nil) }
 
     @objc private func showAbout() {

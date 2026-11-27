@@ -43,7 +43,7 @@ struct TVConfig: Codable, Identifiable, Equatable {
     var clientKey: String?
     var knownInputs: [String] = []
     var volumeMode: VolumeMode = .off
-    /// If true, the TV's label for the input we switch to is set to `inputLabel`.
+    /// If true, "Set input names" renames this TV's input source to `inputLabel`.
     var setInputName = false
     /// Label to show on the TV for the input. Defaults to this Mac's hostname.
     var inputLabel = TVConfig.defaultInputLabel
