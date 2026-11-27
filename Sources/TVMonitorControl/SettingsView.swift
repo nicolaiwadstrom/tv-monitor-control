@@ -89,6 +89,18 @@ private struct TVEditor: View {
                 .fixedSize()
             }
 
+            Toggle("Set input source name on this TV", isOn: $tv.setInputName)
+            if tv.setInputName {
+                HStack {
+                    TextField("Input name", text: $tv.inputLabel, prompt: Text(TVConfig.defaultInputLabel))
+                    Button("Use hostname") { tv.inputLabel = TVConfig.defaultInputLabel }
+                    Button("Set now") { Task { await controller.applyInputName(tv.id) } }
+                        .disabled(tv.clientKey == nil)
+                }
+                Text("Renames the input above (as shown in the TV's input list) to this name. Applied with Set now, or from the menu bar: Set input names on TVs.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+
             Picker("When screens turn off", selection: $tv.mode) {
                 ForEach(PowerMode.allCases) { Text($0.label).tag($0) }
             }

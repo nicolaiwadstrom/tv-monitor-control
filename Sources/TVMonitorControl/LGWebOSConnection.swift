@@ -46,6 +46,19 @@ final class LGWebOSConnection: TVConnection, @unchecked Sendable {
         try await client.request("ssap://tv/switchInput", payload: ["inputId": input])
     }
 
+    func setInputName(_ name: String, input: String) async throws {
+        // Keep the input's existing icon, if the TV reports one.
+        var payload: [String: Any] = ["id": input, "label": name]
+        if let reply = try? await client.request("ssap://tv/getExternalInputList"),
+           let devices = reply["devices"] as? [[String: Any]],
+           let dev = devices.first(where: { $0["id"] as? String == input }),
+           let icon = dev["icon"] as? String,
+           let file = icon.split(separator: "/").last {
+            payload["icon"] = String(file)
+        }
+        try await client.request("ssap://com.webos.service.eim/setDeviceInfo", payload: payload)
+    }
+
     func volumeUp() async throws { try await client.request("ssap://audio/volumeUp") }
     func volumeDown() async throws { try await client.request("ssap://audio/volumeDown") }
 

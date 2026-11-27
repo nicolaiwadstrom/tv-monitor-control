@@ -68,6 +68,29 @@ final class TVController: ObservableObject {
         }
     }
 
+    /// Sets the input source name on every enabled TV that has the option switched on.
+    func applyInputNames() {
+        for tv in store.tvs where tv.enabled && tv.setInputName {
+            Task { await applyInputName(tv.id) }
+        }
+    }
+
+    /// Sets the input source name on one TV (the "Set now" button), regardless of its toggle.
+    func applyInputName(_ id: UUID) async {
+        guard let tv = store.tv(id), !tv.inputLabel.isEmpty else { return }
+        setStatus(id, "Setting input name…")
+        let client = tv.tvType.makeConnection(host: tv.ip, credential: tv.clientKey)
+        defer { client.close() }
+        do {
+            try await client.connect(pairingTimeout: 5)
+            persistKey(id, client)
+            try await client.setInputName(tv.inputLabel, input: tv.inputId)
+            setStatus(id, "Input name set to \"\(tv.inputLabel)\"")
+        } catch {
+            setStatus(id, "Setting input name failed: \(error.localizedDescription)")
+        }
+    }
+
     func detectMAC(_ id: UUID) async {
         guard let tv = store.tv(id) else { return }
         setStatus(id, "Looking up MAC address…")

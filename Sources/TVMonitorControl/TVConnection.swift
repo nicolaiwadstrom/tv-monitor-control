@@ -55,6 +55,9 @@ protocol TVConnection: AnyObject, Sendable {
     /// Called once connected after a wake: bring the panel on and switch to `input`.
     func turnOn(mode: PowerMode, input: String) async throws
 
+    /// Sets the TV's display label for `input` (best effort; throws if unsupported).
+    func setInputName(_ name: String, input: String) async throws
+
     func volumeUp() async throws
     func volumeDown() async throws
     func toggleMute() async throws
